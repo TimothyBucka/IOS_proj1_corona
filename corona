@@ -1,2 +1,4 @@
-#!/user/bin/env bash
+#!/usr/bin/env bash
+set -u  # FIXME after
 
+echo $e
