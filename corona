@@ -1,4 +1,58 @@
-#!/usr/bin/env bash
-set -u  # FIXME after
+#!/bin/sh
 
-echo $e
+export POSIXLY_CORRECT=yes
+export LC_NUMERIC=en_US.UTF-8
+
+set -u # FIXME after
+
+help() {
+    echo "Usage: corona [-h] [FILTERS] [COMMAND] [LOG [LOG2 [...]]"
+    echo ""
+    echo "   -h              prints help with instructions, and script terminates"
+    echo ""
+    echo "COMMAND:"
+    echo "   infected          prints number of infected"
+    echo "   merge             merges multiple input files into one, keeping the original order"
+    echo "   gender            prints number of infected for each gender"
+    echo "   age               prints number of infected for each age group"
+    echo "   daily             prints number of infected for each day"
+    echo "   monthly           prints number of infected for each month"
+    echo "   yearly            prints number of infected for each year"
+    echo "   countries         prints number of infected for each country (CZ not included)"
+    echo "   districts         prints number of infected for each district"
+    echo "   regions           prints number of infected for each region"    
+    echo ""
+    echo "FILTERS:"
+    echo "   -a DATETIME       after: records after given date (included)"
+    echo "   -b DATETIME       before: records before given date (included)"
+    echo "   -g GENDER         records with given GENDER: M - male (muzi), Z - female (zeny)"
+    echo "   -s [WIDTH]        with commands gender, age, daily, monthly, yearly, countries"
+    echo "                     districts and regions the data are displayed in a histogram."
+    echo "                     WIDTH (optional positive number) sets width of the histogram."
+    echo "                     If not given, with is set to default (see documentation)"
+    echo "   -d DISTRICT_FILE  for command disrticts prints, instead of the LAU 1 code of"
+    echo "                     a district, its proper name. DISTRICT_FILE contains the"
+    echo "                     code to name mapping"
+    echo "   -r REGIONS_FILE   for command regions prints instead of the NUTS 3 code of"
+    echo "                     a region, its proper name. REGIONS_FILE contains the"
+    echo "                     code to name mapping"
+    echo ""
+    echo "Script filters records of people infected by COVID-19."
+    echo "If no commands or filters are given, script prints records to standart output"
+    echo "Script is able to process .gz or .bz2 files"
+    echo "If no files (LOG, LOG2, ...) are given, sript expects records from standart input"
+}
+
+COMMAND=""
+FILTERS=""
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in 
+    -h)
+        help
+        exit 0
+        ;;
+    *)
+        shift
+    esac
+done
