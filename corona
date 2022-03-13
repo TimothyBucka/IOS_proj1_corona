@@ -20,7 +20,7 @@ help() {
     echo "   yearly            prints number of infected for each year"
     echo "   countries         prints number of infected for each country (CZ not included)"
     echo "   districts         prints number of infected for each district"
-    echo "   regions           prints number of infected for each region"    
+    echo "   regions           prints number of infected for each region"
     echo ""
     echo "FILTERS:"
     echo "   -a DATETIME       after: records after given date (included)"
@@ -43,16 +43,57 @@ help() {
     echo "If no files (LOG, LOG2, ...) are given, sript expects records from standart input"
 }
 
+search_commands() {
+    for C in $2; do
+        if [ "$C" = $1 ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# COMMANDS="infected merge gender age daily monthly yearly countries districts regions"
 COMMAND=""
 FILTERS=""
 
+DATETIME=""
+GENDER=""
+WIDTH=""
+
 while [ "$#" -gt 0 ]; do
-    case "$1" in 
+    case "$1" in
+    infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
+        COMMAND=$1
+        ;;
+    -a | -b)
+        FILTERS="$FILTERS $1"
+        shift
+        DATETIME=$1
+        ;;
+    -g)
+        FILTERS="$FILTERS $1"
+        shift
+        GENDER=$1
+        ;;
+    -s)
+        FILTERS="$FILTERS $1" #FIXME add width number input
+        ;;
+    -d)
+        ;;
+    -r)
+        ;;
     -h)
         help
         exit 0
         ;;
     *)
-        shift
+        ;;
     esac
+    shift
 done
+
+echo "Filters: $FILTERS"
+echo "Datetime: $DATETIME"
+echo "Gender: $GENDER"
+echo "Command: $COMMAND"
+echo "Width: $WIDTH"
