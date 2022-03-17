@@ -16,6 +16,14 @@ set -u # FIXME after
 # reportovano_khs         9
 
 ############################## FUNCTIONS ##############################
+check_date(){
+	if [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [ -n "$(date -d "$1" 2>:)" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 help() {
     echo "Usage: corona [-h] [FILTERS] [COMMAND] [LOG [LOG2 [...]]"
     echo ""
@@ -87,47 +95,47 @@ REGIONS_FILE=""
 ############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do
     case "$1" in
-    infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
-        COMMAND=$1
-        ;;
-    -a)
-        A_FILTER=1
-        A_DATETIME=$2
-        shift
-        ;;
-    -b)
-        B_FILTER=1
-        B_DATETIME=$2
-        shift
-        ;;
-    -g)
-        G_FILTER=1
-        GENDER=$2
-        shift
-        ;;
-    -s)
-        S_FILTER=1
-        WIDTH="$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
-        if [ -n "$WIDTH" ]; then
+        infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
+            COMMAND=$1
+            ;;
+        -a)
+            A_FILTER=1
+            A_DATETIME=$2
             shift
-        fi
-        ;;
-    -d)
-        D_FILTER=1
-        DISTRICT_FILE=$2
-        shift
-        ;;
-    -r)
-        R_FILTER=1
-        REGIONS_FILE=$2
-        shift
-        ;;
-    -h)
-        help
-        exit 0
-        ;;
-    *)
-        ;;
+            ;;
+        -b)
+            B_FILTER=1
+            B_DATETIME=$2
+            shift
+            ;;
+        -g)
+            G_FILTER=1
+            GENDER=$2
+            shift
+            ;;
+        -s)
+            S_FILTER=1
+            WIDTH="$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
+            if [ -n "$WIDTH" ]; then
+                shift
+            fi
+            ;;
+        -d)
+            D_FILTER=1
+            DISTRICT_FILE=$2
+            shift
+            ;;
+        -r)
+            R_FILTER=1
+            REGIONS_FILE=$2
+            shift
+            ;;
+        -h)
+            help
+            exit 0
+            ;;
+        *)
+            ;;
     esac
     shift
 done
