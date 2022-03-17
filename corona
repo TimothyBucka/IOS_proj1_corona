@@ -5,6 +5,16 @@ export LC_NUMERIC=en_US.UTF-8
 
 set -u # FIXME after
 
+# id,                     1     FIXME
+# datum,                  2
+# vek,                    3
+# pohlavi,                4
+# kraj_nuts_kod,          5
+# okres_lau_kod,          6
+# nakaza_v_zahranici,     7
+# nakaza_zeme_csu_kod,    8
+# reportovano_khs         9
+
 ############################## FUNCTIONS ##############################
 help() {
     echo "Usage: corona [-h] [FILTERS] [COMMAND] [LOG [LOG2 [...]]"
@@ -97,7 +107,7 @@ while [ "$#" -gt 0 ]; do
         ;;
     -s)
         S_FILTER=1
-        read WIDTH <<< "$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
+        WIDTH="$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
         if [ -n "$WIDTH" ]; then
             shift
         fi
