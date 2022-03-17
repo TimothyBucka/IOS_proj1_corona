@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
 set -u # FIXME after
 
+############################## FUNCTIONS ##############################
 help() {
     echo "Usage: corona [-h] [FILTERS] [COMMAND] [LOG [LOG2 [...]]"
     echo ""
@@ -41,6 +42,7 @@ help() {
     echo "If no commands or filters are given, script prints records to standart output"
     echo "Script is able to process .gz or .bz2 files"
     echo "If no files (LOG, LOG2, ...) are given, sript expects records from standart input"
+    echo ""
 }
 
 search_commands() {
@@ -52,35 +54,63 @@ search_commands() {
     return 1
 }
 
+############################## DATA ##############################
 # COMMANDS="infected merge gender age daily monthly yearly countries districts regions"
 COMMAND=""
-FILTERS=""
 
-DATETIME=""
+# FILTERS
+A_FILTER=""
+B_FILTER=""
+G_FILTER=""
+S_FILTER=""
+D_FILTER=""
+R_FILTER=""
+
+# filters parameters
+A_DATETIME=""
+B_DATETIME=""
 GENDER=""
-WIDTH=""
+WIDTH=""    # c FIXME but youll need [ -n "$WIDTH" ]
+DISTRICT_FILE=""
+REGIONS_FILE=""
 
+############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do
     case "$1" in
     infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
         COMMAND=$1
         ;;
-    -a | -b)
-        FILTERS="$FILTERS $1"
+    -a)
+        A_FILTER=1
+        A_DATETIME=$2
         shift
-        DATETIME=$1
+        ;;
+    -b)
+        B_FILTER=1
+        B_DATETIME=$2
+        shift
         ;;
     -g)
-        FILTERS="$FILTERS $1"
+        G_FILTER=1
+        GENDER=$2
         shift
-        GENDER=$1
         ;;
     -s)
-        FILTERS="$FILTERS $1" #FIXME add width number input
+        S_FILTER=1
+        read WIDTH <<< "$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
+        if [ -n "$WIDTH" ]; then
+            shift
+        fi
         ;;
     -d)
+        D_FILTER=1
+        DISTRICT_FILE=$2
+        shift
         ;;
     -r)
+        R_FILTER=1
+        REGIONS_FILE=$2
+        shift
         ;;
     -h)
         help
@@ -92,8 +122,8 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-echo "Filters: $FILTERS"
-echo "Datetime: $DATETIME"
-echo "Gender: $GENDER"
+echo "-a $A_FILTER and $A_DATETIME"
+echo "-b $B_FILTER and $B_DATETIME"
+echo "-g $G_FILTER and $GENDER"
+echo "-s $S_FILTER and $WIDTH"
 echo "Command: $COMMAND"
-echo "Width: $WIDTH"
