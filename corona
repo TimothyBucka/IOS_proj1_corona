@@ -17,7 +17,7 @@ set -u # FIXME after
 
 ############################## FUNCTIONS ##############################
 check_date(){
-	if [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [ -n "$(date -d "$1" 2>:)" ]; then
+	if [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [ -n "$(date -d "$1" 2>/dev/null)" ]; then
 		return 0
 	else
 		return 1
@@ -63,13 +63,22 @@ help() {
     echo ""
 }
 
-search_commands() {
-    for C in $2; do
-        if [ "$C" = $1 ]; then
-            return 0
-        fi
-    done
-    return 1
+load_logs() {
+    if [ -n "$GZ_LOGS" ]; then
+        GZ_LOGS="$(gzip -d -c "$GZ_LOGS")"
+        LOGS="$LOGS $GZ_LOGS"
+    fi
+
+    if [ -n "$BZ2_LOGS" ]; then
+        BZ2_LOGS="$(bzip2 -d -c "$BZ2_LOGS")"
+        LOGS="$LOGS $BZ2_LOGS"
+    fi
+
+    if [ -n "$LOGS" ]; then
+        LOGS="$(cat "$LOGS")"
+    else
+        LOGS="$(cat)"
+    fi
 }
 
 ############################## DATA ##############################
@@ -86,11 +95,16 @@ R_FILTER=""
 
 # filters parameters
 A_DATETIME=""
-B_DATETIME=""
+B_DATETIME="2023-01-01"
 GENDER=""
 WIDTH=""    # c FIXME but youll need [ -n "$WIDTH" ]
 DISTRICT_FILE=""
 REGIONS_FILE=""
+
+# LOGS
+BZ2_LOGS=""
+GZ_LOGS=""
+LOGS=""
 
 ############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do
@@ -115,8 +129,8 @@ while [ "$#" -gt 0 ]; do
             ;;
         -s)
             S_FILTER=1
-            WIDTH="$(echo "$2" | awk '$0 ~/^[0-9]+$/ { print $0 }')"
-            if [ -n "$WIDTH" ]; then
+            if [[ "$2" =~ ^[0-9]+$ ]]; then
+                WIDTH=$2
                 shift
             fi
             ;;
@@ -135,6 +149,13 @@ while [ "$#" -gt 0 ]; do
             exit 0
             ;;
         *)
+            if [[ $1 == *.gz ]]; then
+                GZ_LOGS="$GZ_LOGS $1"
+            elif [[ $1 == *.bz2 ]]; then
+                BZ2_LOGS="$BZ2_LOGS $1"
+            else
+                LOGS="$LOGS $1"
+            fi
             ;;
     esac
     shift
@@ -145,3 +166,7 @@ echo "-b $B_FILTER and $B_DATETIME"
 echo "-g $G_FILTER and $GENDER"
 echo "-s $S_FILTER and $WIDTH"
 echo "Command: $COMMAND"
+
+load_logs
+
+exit 0
