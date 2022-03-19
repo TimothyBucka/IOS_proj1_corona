@@ -1,0 +1,5 @@
+# Data folder #
+data/
+
+# Other input files #
+*.csv
