@@ -3,8 +3,6 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
-set -u # FIXME after
-
 # id,                     1     FIXME
 # datum,                  2
 # vek,                    3
@@ -30,6 +28,15 @@ check_date(){
 	else
 		return 1
 	fi
+}
+
+debug_print_values() {
+    # FIXME delete this
+    echo "-a $A_FILTER and $A_DATETIME"
+    echo "-b $B_FILTER and $B_DATETIME"
+    echo "-g $G_FILTER and $GENDER"
+    echo "-s $S_FILTER and $WIDTH"
+    echo "Command: $COMMAND"
 }
 
 help() {
@@ -71,24 +78,6 @@ help() {
     echo ""
 }
 
-load_logs() {
-    if [ -n "$GZ_LOGS" ]; then
-        GZ_LOGS="$(gzip -d -c "$GZ_LOGS")"
-        LOGS="$LOGS $GZ_LOGS"
-    fi
-
-    if [ -n "$BZ2_LOGS" ]; then
-        BZ2_LOGS="$(bzip2 -d -c "$BZ2_LOGS")"
-        LOGS="$LOGS $BZ2_LOGS"
-    fi
-
-    if [ -n "$LOGS" ]; then
-        LOGS="$(cat "$LOGS")"
-    else
-        LOGS="$(cat)"
-    fi
-}
-
 ############################## DATA ##############################
 # COMMANDS="infected merge gender age daily monthly yearly countries districts regions"
 COMMAND=""
@@ -105,7 +94,7 @@ R_FILTER=""
 A_DATETIME=""
 B_DATETIME="2023-01-01"
 GENDER=""
-WIDTH=""    # c FIXME but youll need [ -n "$WIDTH" ]
+WIDTH=""
 DISTRICT_FILE=""
 REGIONS_FILE=""
 
@@ -113,6 +102,9 @@ REGIONS_FILE=""
 BZ2_LOGS=""
 GZ_LOGS=""
 LOGS=""
+INPUT=""
+
+HEADER="id,datum,vek,pohlavi,kraj_nuts_kod,okres_lau_kod,nakaza_v_zahranici,nakaza_zeme_csu_kod,reportovano_khs"
 
 ############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do
@@ -158,23 +150,23 @@ while [ "$#" -gt 0 ]; do
             ;;
         *)
             if [[ $1 == *.gz ]]; then
-                GZ_LOGS="$GZ_LOGS $1"
+                INPUT="$INPUT\n$(gzip -d -c "$1")"
             elif [[ $1 == *.bz2 ]]; then
-                BZ2_LOGS="$BZ2_LOGS $1"
+                INPUT="$INPUT\n$(bzip2 -d -c "$1")"
             else
-                LOGS="$LOGS $1"
+                INPUT="$INPUT\n$(cat "$1")"
             fi
             ;;
     esac
     shift
 done
 
-echo "-a $A_FILTER and $A_DATETIME"
-echo "-b $B_FILTER and $B_DATETIME"
-echo "-g $G_FILTER and $GENDER"
-echo "-s $S_FILTER and $WIDTH"
-echo "Command: $COMMAND"
+if [ -z "$INPUT" ]; then
+    INPUT="$(cat)"
+else
+    INPUT="$(echo -e "$INPUT")"
+fi
 
-load_logs
+echo "$INPUT"
 
-exit 0
+exit 0 
