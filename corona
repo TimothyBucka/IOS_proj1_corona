@@ -103,7 +103,6 @@ EXIT_CODE="0"
 HEADER="id,datum,vek,pohlavi,kraj_nuts_kod,okres_lau_kod,nakaza_v_zahranici,nakaza_zeme_csu_kod,reportovano_khs"
 INPUT=""
 
-
 ############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -148,11 +147,11 @@ while [ "$#" -gt 0 ]; do
             ;;
         *)
             if [[ $1 == *.gz ]]; then
-                INPUT="$INPUT\n$(gzip -d -c "$1")"
+                INPUT="$INPUT\n$(gzip -d -c "$1" | tail -n +2)"
             elif [[ $1 == *.bz2 ]]; then
-                INPUT="$INPUT\n$(bzip2 -d -c "$1")"
+                INPUT="$INPUT\n$(bzip2 -d -c "$1" | tail -n +2)"
             else
-                INPUT="$INPUT\n$(cat "$1")"
+                INPUT="$INPUT\n$(cat "$1" | tail -n +2)"
             fi
             ;;
     esac
@@ -160,9 +159,9 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ -z "$INPUT" ]; then
-    INPUT="$(cat)"
+    INPUT="$(cat | trim -n +2)"
 else
-    INPUT="$(echo -e "$INPUT")"
+    INPUT="$(echo -e "$INPUT" | tail -n +2)"
 fi
 
 echo "$INPUT"
