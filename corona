@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -u  # FIXME after
 
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
@@ -154,16 +155,92 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-if [ -z "$LOGS" ]; then
-    cat | tail -n +2
+if [ -z "$COMMAND" ] || [ "$COMMAND" == "merge" ]; then
+    echo "$HEADER"
+    if [ -z "$LOGS" ]; then
+        cat | tail -n +2 | awk -F ',' -v after_date="$A_DATETIME" -v before_date="$B_DATETIME" -v gender="$GENDER" \
+            '{
+                if (after_date<=$2 && $2<=before_date) {
+                    if (gender==$4 || gender=="") {
+                        print $0
+                    }
+                }
+            }'
+    else
+        for file in $LOGS; do
+            if [[ $file == *.gz ]]; then
+                gzip -d -c $file | tail -n +2 | awk -F ',' -v after_date="$A_DATETIME" -v before_date="$B_DATETIME" -v gender="$GENDER" \
+                    '{
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                print $0
+                            }
+                        }
+                    }'
+            elif [[ $file == *.bz2 ]]; then
+                bzip2 -d -c $file | tail -n +2 | awk -F ',' -v after_date="$A_DATETIME" -v before_date="$B_DATETIME" -v gender="$GENDER" \
+                    '{
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                print $0
+                            }
+                        }
+                    }'
+            else
+                cat $file | tail -n +2 | awk -F ',' -v after_date="$A_DATETIME" -v before_date="$B_DATETIME" -v gender="$GENDER" \
+                    '{
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                print $0
+                            }
+                        }
+                    }'
+            fi
+        done
+    fi
 else
-    for file in $LOGS; do
-        if [[ "$file" == *.gz ]]; then
-            gzip -d -c "$file" | tail -n +2 >>out.txt
-        elif [[ "$file" == *.bz2 ]]; then
-            bzip2 -d -c "$file" | tail -n +2 >>out.txt
+    if [ -z "$LOGS" ]; then
+        cat | tail -n +2 | \
+            awk -F ',' \
+                -v after_date="$A_DATETIME" \
+                -v before_date="$B_DATETIME" \
+                -v gender="$GENDER" \
+                '{
+                    if (after_date<=$2 && $2<=before_date) {
+                        if (gender==$4 || gender=="") {
+                            
+                        }
+                    }
+                }'
+    else
+        if [[ $LOGS == *.gz ]]; then
+            gzip -d -c $LOGS | tail -n +2 | \
+                awk -F ',' \
+                    -v after_date="$A_DATETIME" \
+                    -v before_date="$B_DATETIME" \
+                    -v gender="$GENDER" \
+                    '{
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                
+                            }
+                        }
+                    }'
+        elif [[ $LOGS == *.bz2 ]]; then
+            bzip2 -d -c $LOGS | tail -n +2 | \
+                awk -F ',' \
+                    -v after_date="$A_DATETIME" \
+                    -v before_date="$B_DATETIME" \
+                    -v gender="$GENDER" \
+                    '{
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                
+                            }
+                        }
+                    }'
         else
-            cat "$file" | tail -n +2 |
+            cat $LOGS | tail -n +2 | \
                 awk -F ',' \
                     -v after_date="$A_DATETIME" \
                     -v before_date="$B_DATETIME" \
@@ -171,14 +248,14 @@ else
                     -v width="$WIDTH" \
                     -v command="$COMMAND" \
                     '{
-                    if (after_date<=$2 && $2<=before_date) {
-                        if (gender==$4 || gender=="") {
-                            print $0
+                        if (after_date<=$2 && $2<=before_date) {
+                            if (gender==$4 || gender=="") {
+                                
+                            }
                         }
-                    }
-                }'
+                    }'
         fi
-    done
+    fi
 fi
 
 exit "$EXIT_CODE"
