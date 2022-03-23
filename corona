@@ -118,7 +118,7 @@ traverse_awk() {
             for (i in arr) {
                 if (i != "") {
                     print i ": " arr[i]
-                } else {
+                } else if (arr[i] != 0){
                     no_val = 1
                 }
             }
@@ -133,6 +133,9 @@ traverse_awk() {
         
         BEGIN{
             c_infected = 0
+            gender_arr["Z"] = 0
+            gender_arr["M"] = 0
+            gender_arr[""] = 0
         }{
             split($2,date_split,"-")
             gsub(" ", "", $0)
