@@ -113,13 +113,13 @@ traverse_awk() {
             no_val = 0
             for (i in arr) {
                 if (i != "") {
-                    print i ": " arr[i]
+                    print i ": " arr[i] | "sort"
                 } else if (arr[i] != 0){
                     no_val = 1
                 }
             }
             if (no_val) {
-                print "None: " arr[""]
+                print "None: " arr[""] | "sort"
             }
         }
 
@@ -154,6 +154,19 @@ traverse_awk() {
                 print_array(day_arr, 500)
             }
         }'
+}
+
+awk_none_end () {
+    awk \
+    '{
+        if ($0 ~ /None:.*/)
+            line=$0
+        else
+            print $0
+    } END {
+        if (line!="")
+            print line
+    }'
 }
 
 ############################## DATA ##############################
@@ -246,14 +259,14 @@ if [ -z "$COMMAND" ] || [ "$COMMAND" == "merge" ]; then
     fi
 else
     if [ -z "$LOGS" ]; then
-        cat | tail -n +2 | traverse_awk | sort | awk '{if ($0 ~ /None:.*/) {line=$0} else {print $0}} END {if (line!="") print line}'
+        cat | tail -n +2 | traverse_awk | awk_none_end
     else
         if [[ $LOGS == *.gz ]]; then
-            gzip -d -c $LOGS | tail -n +2 | traverse_awk | sort | awk '{if ($0 ~ /None:.*/) {line=$0} else {print $0}} END {if (line!="") print line}'
+            gzip -d -c $LOGS | tail -n +2 | traverse_awk | awk_none_end
         elif [[ $LOGS == *.bz2 ]]; then
-            bzip2 -d -c $LOGS | tail -n +2 | traverse_awk | sort | awk '{if ($0 ~ /None:.*/) {line=$0} else {print $0}} END {if (line!="") print line}'
+            bzip2 -d -c $LOGS | tail -n +2 | traverse_awk | awk_none_end
         else
-            cat $LOGS | tail -n +2 | traverse_awk | sort | awk '{if ($0 ~ /None:.*/) {line=$0} else {print $0}} END {if (line!="") print line}'
+            cat $LOGS | tail -n +2 | traverse_awk | awk_none_end
         fi
     fi
 fi
