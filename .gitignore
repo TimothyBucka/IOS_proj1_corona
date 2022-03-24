@@ -1,6 +1,10 @@
 # Data folder #
 data/
 
+# Testing #
+run_tests
+test_commands
+
 # Other input files #
 *.csv
 *.txt
