@@ -110,31 +110,36 @@ traverse_awk() {
         }
 
         function print_array(arr, def_len) {
-            no_val = 0
             for (i in arr) {
-                if (i != "") {
-                    print i ": " arr[i] | "sort"
-                } else if (arr[i] != 0){
-                    no_val = 1
+                if (i == "" ) {
+                    print "None: " arr[""]
+                } else {
+                    print i ": " arr[i] | "sort -g"
                 }
             }
-            if (no_val) {
-                print "None: " arr[""] | "sort"
-            }
-        }
-
-        function print_age(arr, def_len) {
-
         }
         
         BEGIN{
             c_infected = 0
+
             gender_arr["M"] = 0
             gender_arr["Z"] = 0
-            gender_arr[""] = 0
+
+            age_arr["0-5"] = 0
+            age_arr["6-15"] = 0
+            age_arr["16-25"] = 0
+            age_arr["26-35"] = 0
+            age_arr["36-45"] = 0
+            age_arr["46-55"] = 0
+            age_arr["56-65"] = 0
+            age_arr["66-75"] = 0
+            age_arr["76-85"] = 0
+            age_arr["86-95"] = 0
+            age_arr["96-105"] = 0
+            age_arr[">105"] = 0
         }{
-            split($2,date_split,"-")
             gsub(" ", "", $0)
+            split($2,date_split,"-")
 
             if (filters_passed()) {
                 if (command == "merge" || command == "") {
@@ -142,7 +147,28 @@ traverse_awk() {
                 } else {
                     c_infected++
                     gender_arr[$4]++
+                    if (command == "age") {
+                        if ($3 == "") { age_arr[""]++ }
+                        else if ($3 <= 5) { age_arr["0-5"]++ }
+                        else if ($3 <= 15) { age_arr["6-15"]++ }
+                        else if ($3 <= 25) { age_arr["16-25"]++ }
+                        else if ($3 <= 35) { age_arr["26-35"]++ }
+                        else if ($3 <= 45) { age_arr["36-45"]++ }
+                        else if ($3 <= 55) { age_arr["46-55"]++ }
+                        else if ($3 <= 65) { age_arr["56-65"]++ }
+                        else if ($3 <= 75) { age_arr["66-75"]++ }
+                        else if ($3 <= 85) { age_arr["76-85"]++ }
+                        else if ($3 <= 95) { age_arr["86-95"]++ }
+                        else if ($3 <= 105) { age_arr["96-105"]++ }
+                        else { age_arr[">105"]++ }
+                    }
                     day_arr[$2]++
+                    month_arr[substr($2, 1, 7)]++
+                    year_arr[substr($2, 1, 4)]++
+                    if ($8 != "" && $8 != "CZ")
+                        country_arr[$8]++
+                    district_arr[$6]++
+                    region_arr[$5]++
                 }
             }
         }END{
@@ -150,8 +176,20 @@ traverse_awk() {
                 print c_infected
             } else if (command == "gender") {
                 print_array(gender_arr, 100000)
+            } else if (command == "age") {
+                print_array(age_arr, 10000)
             } else if (command == "daily") {
                 print_array(day_arr, 500)
+            } else if (command == "monthly") {
+                print_array(month_arr, 10000)
+            } else if (command == "yearly") {
+                print_array(year_arr, 100000)
+            } else if (command == "countries") {
+                print_array(country_arr, 100)
+            } else if (command == "districts") {
+                print_array(district_arr, 1000)
+            } else if (command == "regions") {
+                print_array(region_arr, 10000)
             }
         }'
 }
@@ -160,12 +198,16 @@ awk_none_end () {
     awk \
     '{
         if ($0 ~ /None:.*/)
-            line=$0
+            none_line=$0
+        else if ($0 ~ />105:.*/)
+            age_line=$0
         else
             print $0
     } END {
-        if (line!="")
-            print line
+        if (age_line != "")
+            print age_line
+        if (none_line != "")
+            print none_line
     }'
 }
 
@@ -198,6 +240,7 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
     infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
         COMMAND=$1
+        # fix multiple commands
         ;;
     -a)
         A_FILTER=1
