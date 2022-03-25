@@ -197,9 +197,9 @@ traverse_awk() {
 awk_none_end () {
     awk \
     '{
-        if ($0 ~ /None.*/)
+        if ($0 ~ /^None.*/)
             none_line=$0
-        else if ($0 ~ />105.*/)
+        else if ($0 ~ /^>105.*/)
             age_line=$0
         else
             print $0
@@ -214,14 +214,6 @@ awk_none_end () {
 ############################## DATA ##############################
 # COMMANDS="infected merge gender age daily monthly yearly countries districts regions"
 COMMAND=""
-
-# FILTERS
-A_FILTER=""
-B_FILTER=""
-G_FILTER=""
-S_FILTER=""
-D_FILTER=""
-R_FILTER=""
 
 # filters parameters
 A_DATETIME=""
@@ -239,38 +231,36 @@ LOGS=""
 while [ "$#" -gt 0 ]; do
     case "$1" in
     infected | merge | gender | age | daily | monthly | yearly | countries | districts | regions)
-        COMMAND=$1
-        # fix multiple commands
+        if [ -z "$COMMAND" ]; then
+            COMMAND=$1
+        else
+            echo "Multiple commands not allowed" 1>&2
+            exit 1
+        fi
         ;;
     -a)
-        A_FILTER=1
         A_DATETIME=$2
         shift
         ;;
     -b)
-        B_FILTER=1
         B_DATETIME=$2
         shift
         ;;
     -g)
-        G_FILTER=1
         GENDER=$2
         shift
         ;;
     -s)
-        S_FILTER=1
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             WIDTH=$2
             shift
         fi
         ;;
     -d)
-        D_FILTER=1
         DISTRICT_FILE=$2
         shift
         ;;
     -r)
-        R_FILTER=1
         REGIONS_FILE=$2
         shift
         ;;
@@ -279,7 +269,12 @@ while [ "$#" -gt 0 ]; do
         exit 0
         ;;
     *)
-        LOGS="$LOGS $1"
+        if [[ $1 =~ ^-.*$ ]]; then
+            echo "Unknown filter" 1>&2
+            EXIT_CODE="1"
+        else
+            LOGS="$LOGS $1"
+        fi
         ;;
     esac
     shift
