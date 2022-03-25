@@ -314,4 +314,6 @@ else
     fi
 fi
 
+echo "Hello"
+
 exit "$EXIT_CODE"
