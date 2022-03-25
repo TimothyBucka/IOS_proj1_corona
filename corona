@@ -109,12 +109,12 @@ traverse_awk() {
             return 1
         }
 
-        function print_array(arr, def_len) {
+        function print_array(arr, def_len, line_len) {
             for (i in arr) {
                 if (i == "" ) {
-                    print "None: " arr[""]
+                    printf("%-*s: %s\n", line_len, "None", arr[""])
                 } else {
-                    print i ": " arr[i] | "sort -g"
+                    printf("%-*s: %s\n", line_len, i, arr[i]) | "sort -g"
                 }
             }
         }
@@ -175,21 +175,21 @@ traverse_awk() {
             if (command == "infected") {
                 print c_infected
             } else if (command == "gender") {
-                print_array(gender_arr, 100000)
+                print_array(gender_arr, 100000, 0)
             } else if (command == "age") {
-                print_array(age_arr, 10000)
+                print_array(age_arr, 10000, 6)
             } else if (command == "daily") {
-                print_array(day_arr, 500)
+                print_array(day_arr, 500, 0)
             } else if (command == "monthly") {
-                print_array(month_arr, 10000)
+                print_array(month_arr, 10000, 0)
             } else if (command == "yearly") {
-                print_array(year_arr, 100000)
+                print_array(year_arr, 100000, 0)
             } else if (command == "countries") {
-                print_array(country_arr, 100)
+                print_array(country_arr, 100, 0)
             } else if (command == "districts") {
-                print_array(district_arr, 1000)
+                print_array(district_arr, 1000, 0)
             } else if (command == "regions") {
-                print_array(region_arr, 10000)
+                print_array(region_arr, 10000, 0)
             }
         }'
 }
@@ -197,9 +197,9 @@ traverse_awk() {
 awk_none_end () {
     awk \
     '{
-        if ($0 ~ /None:.*/)
+        if ($0 ~ /None.*/)
             none_line=$0
-        else if ($0 ~ />105:.*/)
+        else if ($0 ~ />105.*/)
             age_line=$0
         else
             print $0
