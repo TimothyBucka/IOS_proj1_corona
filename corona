@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-set -u # FIXME after
+
+# Made by: Timotej Bucka (xbucka00)
+# 2022
 
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
-# id,                     1     FIXME
+# id,                     1
 # datum,                  2
 # vek,                    3
 # pohlavi,                4
@@ -33,6 +35,7 @@ awk_sort_end() {
         }'
 }
 
+# check if age is valid
 check_date() {
     if [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [ -n "$(date -d "$1" 2>/dev/null)" ]; then
         return 0
@@ -41,6 +44,7 @@ check_date() {
     fi
 }
 
+# print error message
 error_msg() {
     if [ "$1" == "" ]; then
         echo "./corona: $2" 1>&2
@@ -50,6 +54,7 @@ error_msg() {
     exit "$3"
 }
 
+# print help
 help() {
     echo "This script filters records of people infected by COVID-19."
     echo ""
@@ -90,6 +95,7 @@ help() {
     echo ""
 }
 
+# count records
 traverse_awk() {
     awk -F ',' \
         -v after_date="$A_DATETIME" \
@@ -136,7 +142,7 @@ traverse_awk() {
                     arr[i] = hist_line                                             # to print #... instead of number
                 }
 
-                if (i == "" ) {
+                if ( i == "" ) {
                     printf("%-*s: %s\n", line_len, "None", arr[""])
                 } else {
                     if (command == "age")
