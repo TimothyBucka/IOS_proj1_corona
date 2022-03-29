@@ -4,6 +4,7 @@ data/
 # Testing #
 run_tests
 test_commands
+*.py
 
 # Other input files #
 *.csv
