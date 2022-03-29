@@ -6,6 +6,7 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
+####### awk indexes #######
 # id,                     1
 # datum,                  2
 # vek,                    3
@@ -136,7 +137,13 @@ traverse_awk() {
             for (i in arr) {
                 if (s_filter) {
                     hist_line = ""
-                    for (u = 0; u < int(arr[i]/hist_default); u++) {               # appropriate amount of #
+
+                    if (arr[i]/hist_default - int(arr[i]/hist_default) > 0.9999)
+                        hist_hnum = arr[i]/hist_default
+                    else
+                        hist_hnum = int(arr[i]/hist_default)
+
+                    for (u = 0; u < hist_hnum; u++) {                              # appropriate amount of #
                         hist_line = hist_line"#"
                     }
                     arr[i] = hist_line                                             # to print #... instead of number
@@ -146,10 +153,9 @@ traverse_awk() {
                     printf("%-*s: %s\n", line_len, "None", arr[""])
                 } else {
                     if (command == "age")
-                        printf("%-*s: %s\n", line_len, i, arr[i]) | "sort -g"      # sort by string value. 6-15 is before 16-25
+                        printf("%-*s: %s\n", line_len, i, arr[i]) | "sort -g"      # sort by string value. 6-15 needs to be before 16-25
                     else
                         printf("%-*s: %s\n", line_len, i, arr[i]) | "sort"
-                        
                 }
             }
         }
