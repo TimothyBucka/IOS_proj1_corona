@@ -9,3 +9,5 @@ test_commands
 # Other input files #
 *.csv
 *.txt
+*.bz2
+*.gz

@@ -36,6 +36,21 @@ awk_sort_end() {
         }'
 }
 
+# join input files
+cat_files_awk() {
+    awk -F " " \
+    '{
+        for(i=1; i<=NF; i++) {
+            if ($i ~ /.+\.gz/)
+                system("gzip -d -c " $i "| tail -n +2")
+            else if ($i ~ /.+\.bz2/)
+                system("bzip2 -d -c " $i "| tail -n +2")
+            else
+                system("cat " $i "| tail -n +2")
+        }
+    }'
+}
+
 # check if age is valid
 check_date() {
     if [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [ -n "$(date -d "$1" 2>/dev/null)" ]; then
@@ -109,7 +124,7 @@ traverse_awk() {
         '
         # filter out  invalid lines
         function filters_passed() {
-            if ($0 ~ /^[[:space:]]*$/ || $0 == header) {
+            if ($0 ~ /^[[:space:]]*$/) {
                 return 0
             } else if (!($2 ~ /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $2!="") {          # check date format
                 print "Invalid date: " $0 | "cat 1>&2"
@@ -179,6 +194,10 @@ traverse_awk() {
             age_arr["86-95"] = 0
             age_arr["96-105"] = 0
             age_arr[">105"] = 0
+
+            if (command == "merge" || command == "") {
+                print header
+            }
         }{
             gsub(" ", "", $0)                                       # remove spaces
             split($2,date_split,"-")                                # split date to date_split[(1 - year / 2 - month / 3 - day)]  
@@ -257,6 +276,7 @@ EC_SUCCESS="0"
 EC_MUL_COMMANDS="1"
 EC_UNK_FILTER="2"
 EC_WRG_FARG="3"
+EC_UNK_FILE="4"
 
 ############################## MAIN ##############################
 while [ "$#" -gt 0 ]; do                                                                                    # until all arguments are processed
@@ -309,39 +329,17 @@ while [ "$#" -gt 0 ]; do                                                        
             ;;
         *)
             if [[ $1 =~ ^-.+$ ]]; then error_msg "$1" "Unknown filter" "$EC_UNK_FILTER"; fi
+            if ! [ -f "$1" ]; then error_msg "$1" "File doesnt exist" "$EC_UNK_FILE"; fi
             LOGS="$LOGS $1"
             ;;
     esac
-    shift                                                                                   # get another (new) argument, $1 is the new one 
+    shift                                                               # get another (new) argument, $1 is the new one 
 done
 
-if [ -z "$COMMAND" ] || [ "$COMMAND" == "merge" ]; then                     # when no command or merge, i dont need to remember each value of (infected, gender ...) in awk, i just need to print
-    echo "$HEADER"                                                          # if records are printed header is printed too
-    if [ -z "$LOGS" ]; then                                                 # no file, read stdin
-        cat | tail -n +2 | traverse_awk                                     # tail -n +2, to get rid of header from input file
-    else
-        for file in $LOGS; do                                               # iterate through files from arguments
-            if [[ $file == *.gz ]]; then
-                gzip -d -c $file | tail -n +2 | traverse_awk
-            elif [[ $file == *.bz2 ]]; then
-                bzip2 -d -c $file | tail -n +2 | traverse_awk
-            else
-                cat $file | tail -n +2 | traverse_awk
-            fi
-        done
-    fi
+if [ -z "$LOGS" ]; then                                                 # no file, read stdin
+    cat | tail -n +2 | traverse_awk | awk_sort_end
 else
-    if [ -z "$LOGS" ]; then                                                 # no file, read stdin
-        cat | tail -n +2 | traverse_awk | awk_sort_end
-    else
-        if [[ $LOGS == *.gz ]]; then
-            gzip -d -c $LOGS | tail -n +2 | traverse_awk | awk_sort_end
-        elif [[ $LOGS == *.bz2 ]]; then
-            bzip2 -d -c $LOGS | tail -n +2 | traverse_awk | awk_sort_end
-        else
-            cat $LOGS | tail -n +2 | traverse_awk | awk_sort_end
-        fi
-    fi
+    echo "$LOGS" | cat_files_awk | traverse_awk | awk_sort_end
 fi
 
 exit "$EC_SUCCESS"
